@@ -1,93 +1,137 @@
-# Claude Desktop 繁體中文補丁（zh-TW）
+# Claude Desktop 繁體中文（台灣）補丁
 
-這是一個 macOS 版 Claude Desktop 的繁體中文（台灣）介面補丁。把本專案下載到本機後，雙擊 `install.command`，即可替 Claude Desktop 加入 `中文（台灣）` 語言選項，並安裝台灣繁中介面資源。
+這是一個給 **macOS 版 Claude Desktop** 使用的非官方繁體中文（台灣）介面補丁。安裝後會加入 `中文（台灣）` 語言資源，並盡量把 Claude Desktop、Claude Code、Cowork 相關介面翻成台灣常用的繁體中文用語。
+
+> 目前僅支援 macOS。Windows 版 Claude Desktop 的資源位置、封裝與替換流程不同，本專案暫不支援。
 
 ## 功能特色
 
-- 一鍵安裝 Claude Desktop 繁體中文（台灣）介面資源。
-- 自動把 `zh-TW` 加進 Claude 前端語言白名單。
-- 自動合併目前 Claude 版本的英文語言檔與本專案附帶的台灣繁中翻譯。
-- 新版本新增但尚未翻譯的欄位會保留英文，避免介面缺字；部分常見短字串會用內建 fallback 自動翻譯。
-- 修補部分 Claude Code / Cowork 前端 bundle 內的硬編碼英文短字串，例如 Code 側欄和篩選選單。
-- 安裝前自動備份原始 `/Applications/Claude.app`。
-- 自動寫入 Claude 使用者設定，將語言設定為 `zh-TW`。
+- 安裝 Claude Desktop 繁體中文（台灣）介面資源。
+- 自動將 `zh-TW` 加入 Claude 前端語言白名單。
+- 依照使用者目前安裝的 Claude Desktop 版本，將本專案翻譯檔與官方 `en-US.json` 合併。
+- 新版 Claude Desktop 若新增尚未翻譯的 key，會保留英文避免介面缺字；部分常見短字串會用內建 fallback 自動翻譯。
+- 修補部分前端 bundle 裡的硬編碼英文短字串，例如 Code 側欄、篩選選單與部分設定頁文字。
+- 安裝前自動備份原始 `/Applications/Claude.app`，方便還原。
+- 自動將 Claude 使用者設定寫入 `zh-TW` locale。
 
 ## 適用環境
 
-- **目前僅支援 macOS 版 Claude Desktop。**
-- 已安裝 Claude Desktop，且應用程式位於 `/Applications/Claude.app`。
-- Windows 版 Claude Desktop 的安裝路徑、資源封裝、簽章/替換流程與 macOS 不同；本專案的 `install.command` 與 `patch_claude_zh_tw.py` 不適用於 Windows。
-- 系統內建 Python 3（通常路徑為 `/usr/bin/python3`）
+- macOS。
+- 已安裝 Claude Desktop。
+- Claude Desktop 位於 `/Applications/Claude.app`。
+- 系統可執行 Python 3，通常是 `/usr/bin/python3`。
 
-## 使用方式
+## 安裝方式
+
+### 方法一：雙擊安裝
 
 1. 退出 Claude Desktop。
 2. 下載或 clone 本專案。
 3. 雙擊 `install.command`。
 4. 依照提示輸入 Mac 登入密碼。
-5. Claude 會自動重新開啟。
-6. 如果沒有自動切換，請打開左下角帳號選單，選擇 `Language` -> `中文（台灣）`。
+5. 安裝完成後 Claude Desktop 會自動重新開啟。
+6. 如果沒有自動切換語言，請打開 Claude 左下角帳號選單，選擇 `Language` → `中文（台灣）`。
 
-也可以在終端機執行：
-
-```bash
-cd /path/to/claude-desktop-zh-tw
-sudo /usr/bin/python3 patch_claude_zh_tw.py --user-home "$HOME" --launch
-```
-
-## 從 GitHub 下載
+### 方法二：終端機安裝
 
 ```bash
-git clone https://github.com/<your-name>/claude-desktop-zh-tw.git
+git clone https://github.com/ilovecat1005/claude-desktop-zh-tw.git
 cd claude-desktop-zh-tw
 ./install.command
 ```
 
-如果 `install.command` 無法雙擊執行，可以先執行：
+如果 `install.command` 無法執行，請先加上執行權限：
 
 ```bash
 chmod +x install.command
 ./install.command
 ```
 
-## 檔案說明
+也可以直接執行 Python 補丁：
 
-- `install.command`：雙擊執行入口。
-- `patch_claude_zh_tw.py`：實際執行補丁的 Python 腳本。
-- `resources/manifest.json`：語言包資訊。
-- `resources/frontend-zh-TW.json`：Claude 前端介面台灣繁中翻譯。
-- `resources/desktop-zh-TW.json`：Claude 桌面殼層台灣繁中翻譯。
-- `resources/Localizable.strings`：macOS 原生選單台灣繁中資源。
-- `resources/statsig-zh-TW.json`：statsig i18n 備援資源。
+```bash
+sudo /usr/bin/python3 patch_claude_zh_tw.py --user-home "$HOME" --launch
+```
 
-## 腳本會做什麼
+## 安裝流程會做什麼
 
-- 備份目前的 `/Applications/Claude.app` 到同一個資料夾，名稱類似：
- `Claude.backup-before-zh-TW-20260424-120000.app`
-- 複製 Claude.app 到暫存資料夾並套用補丁。
-- 把 `zh-TW` 加進前端語言白名單。
-- 停用 3p 模式下 Claude Desktop 不支援、但前端仍可能嘗試呼叫的 billing / GitHub repo API，避免 `custom_3p_not_available` 503 重複出現在 log。
-- 合併目前 Claude 版本的 `en-US.json` 和本專案附帶的台灣繁中翻譯：
- 已翻譯的 key 會顯示繁中；新版本新增但本專案尚未翻譯的 key 會保留英文，避免應用程式缺欄位。
-- 寫入 `~/Library/Application Support/Claude/config.json`，設定 `"locale": "zh-TW"`。
-- 重新啟動 Claude。
+腳本會執行以下動作：
 
-## 注意事項
+1. 退出正在執行的 Claude Desktop。
+2. 複製 `/Applications/Claude.app` 到暫存資料夾。
+3. 將 `zh-TW` 加入 Claude 前端語言白名單。
+4. 安裝繁體中文（台灣）前端、桌面殼層與 statsig i18n 資源。
+5. 合併目前 Claude Desktop 內建的 `en-US.json` 與本專案的 `frontend-zh-TW.json`。
+6. 修補部分前端 bundle 裡無法透過 i18n 檔案翻譯的硬編碼短字串。
+7. 寫入使用者設定，將 locale 設為 `zh-TW`。
+8. 對修補後的 app 做本地 ad-hoc 簽署，並套用 Electron / Cowork 需要的 entitlements。
+9. 備份原本的 Claude.app，並把修補後的 Claude.app 放回 `/Applications`。
+10. 重新啟動 Claude Desktop。
 
-Claude Desktop 更新後可能會覆蓋補丁，需要重新執行 `install.command`。
+## 專案檔案
 
-此補丁會修改 Claude.app 的本地資源，因此安裝流程會在替換前對修補後的 app 做 ad-hoc 簽署，並帶上 Electron / Cowork 需要的 entitlements。這會讓 `TeamIdentifier` 顯示為 `not set`，屬於目前本地補丁的預期狀態。若要回到官方簽章，請重新安裝官方 Claude Desktop；重新安裝後需要再執行本專案的 `install.command` 才會恢復繁中補丁。
+```text
+install.command                         # 雙擊安裝入口
+patch_claude_zh_tw.py                   # 主要補丁腳本
+resources/manifest.json                 # 語言包資訊
+resources/frontend-zh-TW.json           # 前端介面翻譯
+resources/desktop-zh-TW.json            # 桌面殼層翻譯
+resources/statsig-zh-TW.json            # statsig i18n 備援翻譯
+resources/Localizable.strings           # macOS 原生字串資源
+```
+
+## 更新 Claude Desktop 後
+
+Claude Desktop 更新後可能會覆蓋補丁。如果更新後介面變回英文，請重新執行：
+
+```bash
+./install.command
+```
 
 ## 解除安裝 / 還原
 
-腳本安裝前會在 `/Applications` 底下產生備份，名稱類似：
+安裝前腳本會在 `/Applications` 底下建立備份，名稱類似：
 
 ```text
 Claude.backup-before-zh-TW-20260424-120000.app
 ```
 
-如需還原，請先退出 Claude Desktop，將目前的 `/Applications/Claude.app` 移走，再把備份 app 改名為 `Claude.app`。
+如需還原：
+
+1. 退出 Claude Desktop。
+2. 將目前的 `/Applications/Claude.app` 移走或刪除。
+3. 將備份 app 改名為 `Claude.app`。
+4. 重新開啟 Claude Desktop。
+
+如果想完全回到官方狀態，也可以直接重新安裝官方 Claude Desktop。
+
+## 注意事項
+
+- 本專案只修改本機 Claude Desktop 的本地資源檔。
+- 這是非官方補丁，不是 Anthropic 官方提供的語言包。
+- 因為修補後會重新做本地 ad-hoc 簽署，`TeamIdentifier` 顯示為 `not set` 是目前預期行為。
+- Claude Desktop 更新後資源結構可能改變，若補丁失敗，請更新本專案或回報 issue。
+- 請不要把修補後的 `Claude.app` 或備份 app 上傳到 GitHub；本專案只需要保存補丁腳本與翻譯資源。
+
+## Windows 支援狀態
+
+目前不支援 Windows。
+
+Windows 版 Claude Desktop 的安裝路徑、資源封裝、檔案替換與權限流程都與 macOS 不同，因此現有的 `install.command` 與 `patch_claude_zh_tw.py` 無法直接使用。
+
+若未來要支援 Windows，建議另外實作：
+
+```text
+install.ps1
+patch_claude_zh_tw_windows.py
+```
+
+並重新確認 Windows 版 Claude Desktop 的資源檔位置與更新後的封裝格式。
+
+## 致謝
+
+本專案的製作靈感來自 [claude-desktop-zh-cn](https://github.com/javaht/claude-desktop-zh-cn)。感謝原專案作者整理 Claude Desktop 本地化補丁的做法與方向，讓這個繁體中文（台灣）版本可以在其基礎概念上延伸製作。
 
 ## 免責聲明
 
-本專案是非官方繁體中文（台灣）補丁，只會修改本機 Claude Desktop 的本地資源檔。Claude Desktop 更新後資源結構可能改變；若補丁失敗，請先更新本專案或重新執行安裝腳本。
+本專案為非官方繁體中文（台灣）補丁，與 Anthropic 官方無關。使用前請自行評估風險；若 Claude Desktop 更新導致補丁失效，請重新執行安裝腳本或等待本專案更新。
