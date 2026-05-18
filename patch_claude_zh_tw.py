@@ -83,6 +83,15 @@ FRONTEND_EXACT_FALLBACK_TRANSLATIONS = {
     "Local": "本機",
     "Cloud": "雲端",
     "All projects": "所有專案",
+    "Legacy Model": "舊版模型",
+}
+
+CONTEXT_USAGE_CATEGORY_LABELS = {
+    "Messages": "訊息",
+    "Compact buffer": "壓縮緩衝區",
+    "Autocompact buffer": "自動壓縮緩衝區",
+    "Skills": "技能",
+    "Free space": "剩餘空間",
 }
 
 
@@ -178,6 +187,44 @@ def patch_language_whitelist(app: Path) -> Path:
     raise SystemExit("無法修補語言白名單。Claude 的 bundle 格式可能已變更。")
 
 
+def patch_context_usage_panel_labels(text: str) -> tuple[str, int]:
+    if "Free space" not in text or "Autocompact buffer" not in text:
+        return text, 0
+
+    label_map = json.dumps(CONTEXT_USAGE_CATEGORY_LABELS, ensure_ascii=False, separators=(",", ":"))
+    helper = f"const __ctxLabels={label_map},ctxLabel=e=>__ctxLabels[e]||e;"
+    if helper in text:
+        return text, 0
+
+    patches = [
+        (
+            "function m(e){return e>=1e9?",
+            f"{helper}function m(e){{return e>=1e9?",
+        ),
+        (
+            'text-t8 flex-1 truncate",children:e.name',
+            'text-t8 flex-1 truncate",children:ctxLabel(e.name)',
+        ),
+        (
+            'text-t6 flex-1 truncate",children:e.name',
+            'text-t6 flex-1 truncate",children:ctxLabel(e.name)',
+        ),
+        (
+            'label:`${e.name} — ${m(e.tokens)} (${a.toFixed(1)}%)`',
+            'label:`${ctxLabel(e.name)} — ${m(e.tokens)} (${a.toFixed(1)}%)`',
+        ),
+    ]
+    patched = text
+    count = 0
+    for old, new in patches:
+        occurrences = patched.count(old)
+        if occurrences != 1:
+            return text, 0
+        patched = patched.replace(old, new, 1)
+        count += 1
+    return patched, count
+
+
 def patch_hardcoded_frontend_strings(app: Path) -> None:
     assets_dir = app / FRONTEND_ASSETS_REL
     replacements = {
@@ -196,6 +243,8 @@ def patch_hardcoded_frontend_strings(app: Path) -> None:
             if occurrences:
                 patched = patched.replace(source, target)
                 count += occurrences
+        patched, usage_count = patch_context_usage_panel_labels(patched)
+        count += usage_count
         if patched != text:
             path.write_text(patched, encoding="utf-8")
             refresh_zstd_asset(path)
